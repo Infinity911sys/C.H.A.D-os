@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  chad-os:
+    build: .
+    container_name: chad-os-app
+    ports:
+      - "8000:8000"
+      - "5000:5000"
+    environment:
+      - CHAD_OS_ENV=production
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - chad-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+  chad-ai-brain:
+    build: .
+    container_name: chad-ai-brain
+    ports:
+      - "8001:8000"
+    environment:
+      - CHAD_OS_ENV=ai-brain
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - chad-os
+    volumes:
+      - ./ai-brain:/app/ai-brain
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - chad-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  chad-research:
+    build: .
+    container_name: chad-research
+    ports:
+      - "8002:8000"
+    environment:
+      - CHAD_OS_ENV=research
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - chad-os
+    volumes:
+      - ./research:/app/research
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - chad-network
+
+networks:
+  chad-network:
+    driver: bridge
